@@ -2,12 +2,13 @@ services:
   - type: web
     name: lab-asset-management
     runtime: python
-    region: oregon  # or your preferred region
-    branch: main
+    region: oregon
     buildCommand: |
       pip install -r requirements.txt
-    startCommand: gunicorn run:app
+    startCommand: gunicorn "run:app" --workers=4
     envVars:
+      - key: SECRET_KEY
+        value: "8a64dae5133aafa1a20eef4e5bd5f642cf7bce7ae80fa6cefad30189057bdf42"
       - key: GOOGLE_CREDENTIALS
         value: |
           {
@@ -20,9 +21,6 @@ services:
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
             "token_uri": "https://oauth2.googleapis.com/token",
             "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/lab-assets-sa%40lab-assets.iam.gserviceaccount.com"
+            "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/lab-assets-sa%40lab-assets.iam.gserviceaccount.com",
             "universe_domain": "googleapis.com"
           }
-      - key: SECRET_KEY
-        generateValue: true
-    healthCheckPath: /
