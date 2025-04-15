@@ -1,39 +1,69 @@
-from flask import Blueprint, jsonify, request, render_template
+from flask import jsonify, request, render_template
+from app import app
 from .google_sheets import get_assets, get_transactions, add_asset, borrow_equipment
-from datetime import datetime
 
-bp = Blueprint('main', __name__)
+# ---- Frontend Routes ----
+@app.route("/")
+def home():
+    """Serve the main dashboard"""
+    return render_template("index.html")
 
-@bp.route('/')
-def index():
-    return render_template('index.html')
-
-@bp.route('/api/assets')
+# ---- API Routes ----
+@app.route("/api/assets")
 def api_assets():
-    return jsonify(get_assets())
+    """Get all assets"""
+    try:
+        return jsonify(get_assets())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-@bp.route('/api/transactions')
+@app.route("/api/transactions")
 def api_transactions():
-    return jsonify(get_transactions())
+    """Get all transactions"""
+    try:
+        return jsonify(get_transactions())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-@bp.route('/api/assets/add', methods=['POST'])
+@app.route("/api/assets/add", methods=["POST"])
 def api_add_asset():
-    data = request.json
-    add_asset(
-        data["name"],
-        data["serial_number"],
-        data["quantity"],
-        data["notes"]
-    )
-    return jsonify({"status": "success"})
+    """Add new equipment"""
+    try:
+        data = request.get_json()
+        add_asset(
+            data["name"],
+            data["serial_number"],
+            data["quantity"],
+            data["notes"]
+        )
+        return jsonify({"status": "success"})
+    except KeyError:
+        return jsonify({"error": "Missing required fields"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-@bp.route('/api/transactions/borrow', methods=['POST'])
+@app.route("/api/transactions/borrow", methods=["POST"])
 def api_borrow():
-    data = request.json
-    borrow_equipment(
-        data["equipment_id"],
-        data["borrower_ntid"],
-        data["expected_return"],
-        data["purpose"]
-    )
-    return jsonify({"status": "success"})
+    """Process equipment borrowing"""
+    try:
+        data = request.get_json()
+        borrow_equipment(
+            data["equipment_id"],
+            data["borrower_ntid"],
+            data["expected_return"],
+            data["purpose"]
+        )
+        return jsonify({"status": "success"})
+    except KeyError:
+        return jsonify({"error": "Missing required fields"}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ---- Error Handlers ----
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"error": "Not found"}), 404
+
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify({"error": "Internal server error"}), 500
