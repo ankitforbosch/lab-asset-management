@@ -3,22 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EED2 Lab Assets</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <title>Lab Asset Management System</title>
+    
+    <!-- CSS Imports (Fixed URL paths) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <!-- Loading Indicator -->
-    <div id="loadingIndicator">
+    <div id="loadingIndicator" class="d-none">
         <div class="spinner-border text-primary" role="status"></div>
+        <span class="ms-2">Loading...</span>
     </div>
 
-    <!-- Navbar -->
+    <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
         <div class="container">
             <a class="navbar-brand" href="#" onclick="showView('dashboard')">
-                <i class="bi bi-pc-display-horizontal"></i> EED2_LAB_ASSETS
+                <i class="bi bi-pc-display-horizontal"></i> Lab Asset Manager
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -37,97 +40,105 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#" onclick="showView('return')">
-                            <i class="bi bi-arrow-return-left"></i> Return
+                            <i class="bi bi-arrow-return-left"></i> Returns
                         </a>
                     </li>
                 </ul>
-                <a class="nav-link me-3" href="#" onclick="showCartModal()">
-                    <i class="bi bi-cart3"></i> Cart <span id="cartBadge" class="badge bg-danger">0</span>
-                </a>
-                <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addEquipmentModal">
-                    <i class="bi bi-plus-lg"></i> Add Equipment
-                </button>
+                <div class="d-flex">
+                    <a class="nav-link me-3" href="#" onclick="showCartModal()">
+                        <i class="bi bi-cart3"></i> 
+                        <span id="cartBadge" class="badge bg-danger">0</span>
+                    </a>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addEquipmentModal">
+                        <i class="bi bi-plus-lg"></i> Add Equipment
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
 
-    <!-- Dashboard View -->
-    <div class="container mt-2 view-container active" id="dashboardView">
-        <div class="row mb-4 g-3">
-            <div class="col-md-4">
-                <div class="card text-white bg-success clickable-card" onclick="showItemsModal('Available')">
-                    <div class="card-body text-center">
-                        <h5><i class="bi bi-check-circle"></i> Available</h5>
-                        <h2 id="available-count">0</h2>
+    <!-- Main Content Container -->
+    <div class="container">
+        <!-- Dashboard View -->
+        <div id="dashboardView" class="view-container">
+            <div class="row mb-4 g-3">
+                <div class="col-md-4">
+                    <div class="card text-white bg-success clickable-card" onclick="showItemsModal('Available')">
+                        <div class="card-body text-center">
+                            <h5><i class="bi bi-check-circle"></i> Available</h5>
+                            <h2 id="available-count">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-danger clickable-card" onclick="showItemsModal('Borrowed')">
+                        <div class="card-body text-center">
+                            <h5><i class="bi bi-box-seam"></i> Borrowed</h5>
+                            <h2 id="borrowed-count">0</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-white bg-warning clickable-card" onclick="showItemsModal('Under Maintenance')">
+                        <div class="card-body text-center">
+                            <h5><i class="bi bi-tools"></i> Maintenance</h5>
+                            <h2 id="maintenance-count">0</h2>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card text-white bg-danger clickable-card" onclick="showItemsModal('Borrowed')">
-                    <div class="card-body text-center">
-                        <h5><i class="bi bi-box-seam"></i> Borrowed</h5>
-                        <h2 id="borrowed-count">0</h2>
+        </div>
+
+        <!-- History View -->
+        <div id="historyView" class="view-container d-none">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="bi bi-clock-history"></i> Equipment History Log</h5>
+                    <div class="d-flex gap-2">
+                        <input type="text" id="historySearch" class="form-control" placeholder="Search...">
+                        <select class="form-select" id="historyFilter">
+                            <option value="all">All Activities</option>
+                            <option value="borrow">Borrows Only</option>
+                            <option value="return">Returns Only</option>
+                        </select>
                     </div>
                 </div>
+                <div class="card-body">
+                    <div id="historyLogContent" class="history-log"></div>
+                </div>
             </div>
-            <div class="col-md-4">
-                <div class="card text-white bg-warning clickable-card" onclick="showItemsModal('Under Maintenance')">
-                    <div class="card-body text-center">
-                        <h5><i class="bi bi-tools"></i> Maintenance</h5>
-                        <h2 id="maintenance-count">0</h2>
+        </div>
+
+        <!-- Return View -->
+        <div id="returnView" class="view-container d-none">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-arrow-return-left"></i> Return Equipment</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="returnerNTID" class="form-label">Your NTID</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="returnerNTID" placeholder="Enter NTID">
+                            <button class="btn btn-primary" onclick="loadBorrowedItems()">
+                                <i class="bi bi-search"></i> Find Items
+                            </button>
+                        </div>
                     </div>
+                    <div id="borrowedItemsList" class="mb-3"></div>
+                    <div class="mb-3">
+                        <label for="returnNotes" class="form-label">Return Notes</label>
+                        <textarea class="form-control" id="returnNotes" rows="3"></textarea>
+                    </div>
+                    <button class="btn btn-success w-100" onclick="processReturn()" id="returnBtn" disabled>
+                        <i class="bi bi-check-circle"></i> Return Selected Items
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- History Log View -->
-    <div class="container mt-2 view-container" id="historyView">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5><i class="bi bi-clock-history"></i> Equipment History Log</h5>
-                <div class="d-flex gap-2">
-                    <input type="text" id="historySearch" class="form-control" placeholder="Search...">
-                    <select class="form-select" id="historyFilter">
-                        <option value="all">All Activities</option>
-                        <option value="borrow">Borrows Only</option>
-                        <option value="return">Returns Only</option>
-                    </select>
-                </div>
-            </div>
-            <div class="card-body history-log" id="historyLogContent"></div>
-        </div>
-    </div>
-
-    <!-- Return Equipment View -->
-    <div class="container mt-2 view-container" id="returnView">
-        <div class="card">
-            <div class="card-header">
-                <h5><i class="bi bi-arrow-return-left"></i> Return Equipment</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label for="returnerNTID" class="form-label">Your NTID</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" id="returnerNTID" placeholder="Enter your NTID">
-                        <button class="btn btn-primary" onclick="loadBorrowedItems()">
-                            <i class="bi bi-search"></i> Find Items
-                        </button>
-                    </div>
-                </div>
-                <div id="borrowedItemsList" class="mb-3"></div>
-                <div class="mb-3">
-                    <label for="returnNotes" class="form-label">Return Notes</label>
-                    <textarea class="form-control" id="returnNotes" rows="3"></textarea>
-                </div>
-                <button class="btn btn-success w-100" onclick="processReturn()" id="returnBtn" disabled>
-                    <i class="bi bi-check-circle"></i> Return Selected Items
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- All Modals -->
+    <!-- Modal Windows -->
     <!-- Items Modal -->
     <div class="modal fade" id="itemsModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl">
@@ -136,7 +147,9 @@
                     <h5 class="modal-title" id="itemsModalTitle">Items</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body modal-grid" id="itemsModalBody"></div>
+                <div class="modal-body">
+                    <div class="modal-grid" id="itemsModalBody"></div>
+                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
@@ -156,15 +169,15 @@
                     <div id="cartItemsList"></div>
                     <div class="mt-3">
                         <label for="borrowerId" class="form-label">Your NTID</label>
-                        <input type="text" class="form-control" id="borrowerId" placeholder="Enter your NTID">
+                        <input type="text" class="form-control" id="borrowerId" placeholder="Enter NTID" required>
                     </div>
                     <div class="mt-3">
                         <label for="expectedReturn" class="form-label">Expected Return Date</label>
-                        <input type="date" class="form-control" id="expectedReturn">
+                        <input type="date" class="form-control" id="expectedReturn" required>
                     </div>
                     <div class="mt-3">
                         <label for="borrowPurpose" class="form-label">Purpose</label>
-                        <textarea class="form-control" id="borrowPurpose" rows="3" placeholder="Purpose of borrowing"></textarea>
+                        <textarea class="form-control" id="borrowPurpose" rows="3" placeholder="Purpose of borrowing" required></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -199,7 +212,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="quantity" class="form-label">Quantity</label>
-                            <input type="number" class="form-control" id="quantity" min="1" value="1">
+                            <input type="number" class="form-control" id="quantity" min="1" value="1" required>
                         </div>
                         <div class="mb-3">
                             <label for="notes" class="form-label">Notes</label>
@@ -215,9 +228,18 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript Imports (Fixed URL paths) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    
+    <!-- Initialize default return date -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            document.getElementById('expectedReturn').valueAsDate = nextWeek;
+        });
+    </script>
 </body>
 </html>
